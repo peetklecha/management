@@ -1,34 +1,6 @@
-const employees = [
-  { id: 1, name: 'moe'},
-  { id: 2, name: 'larry', managerId: 1},
-  { id: 4, name: 'shep', managerId: 2},
-  { id: 3, name: 'curly', managerId: 1},
-  { id: 5, name: 'groucho', managerId: 3},
-  { id: 6, name: 'harpo', managerId: 5},
-  { id: 8, name: 'shep Jr.', managerId: 4},
-  { id: 99, name: 'lucy', managerId: 1}
-];
-  
-const spacer = (text)=> {
-  if(!text){
-    return console.log('');
-  }
-  const stars = new Array(5).fill('*').join('');
-  console.log(`${stars} ${text} ${stars}`);
-}
-
-
-
-
-
 const findEmployeeByName = (name, arr) => {
   return arr.find(elem => elem.name === name)
 }
-
-spacer('findEmployeeByName Moe')
-// given a name and array of employees, return employee
-console.log(findEmployeeByName('moe', employees));//{ id: 1, name: 'moe' }
-spacer('')
 
 
 
@@ -41,11 +13,6 @@ const findManagerFor = (obj, arr) => {
     return []
   }
 }
-
-spacer('findManagerFor shep Jr')
-//given an employee and a list of employees, return the employee who is the manager
-console.log(findManagerFor(findEmployeeByName('harpo', employees), employees));//{ id: 4, name: 'shep', managerId: 2 }
-spacer('')
 
 
 
@@ -63,14 +30,6 @@ const findCoworkersFor = (obj, arr) => {
   return coworkers.slice(1)
 }
 
-spacer('findCoworkersFor Larry')
-//given an employee and a list of employees, return the employees who report to the same manager
-console.log(findCoworkersFor(findEmployeeByName('lucy', employees), employees));/*
-[ { id: 3, name: 'curly', managerId: 1 },
-  { id: 99, name: 'lucy', managerId: 1 } ]
-*/
-spacer('');
-
 
 
 
@@ -87,99 +46,43 @@ const findManagementChainForEmployee = (obj, arr) => {
   return [arr[0], ...newArr]
 }
 
-spacer('findManagementChain for moe')
-//given an employee and a list of employees, return a the management chain for that employee. The management chain starts from the employee with no manager with the passed in employees manager 
-console.log(findManagementChainForEmployee(findEmployeeByName('moe', employees), employees));//[  ]
-spacer('');
-spacer('findManagementChain for shep Jr.')
-console.log(findManagementChainForEmployee(findEmployeeByName('shep Jr.', employees), employees));/*
-[ { id: 1, name: 'moe' },
-  { id: 2, name: 'larry', managerId: 1 },
-  { id: 4, name: 'shep', managerId: 2 }]
-*/
-spacer('');
 
 
 
-
-
-const findEmployeesFor = (manager, employees) => {
-  return employees.map((employee) => {
-    if (employee.managerId === manager.id) {
-      employee.reports = []
-      return employee
-    }
-  }).filter(empObj => empObj)
-}
 
 const generateManagementTree = (employees) => {
   let tree = {}
-  let topManager = employees.find(employObj => {
-    if (employObj.managerId === undefined) {
-      tree = employObj
-    } 
-  })
-  tree.reports = employees.map(e => {
-    return e.reports = findEmployeesFor(e, employees)
-  })
+  const manager = employees.find(employObj => employObj.managerId === undefined)
+  tree = {...manager}
+
+  const findEmployeesFor = (manager, employees) => {
+    const underlings = employees.filter(employee => employee.managerId === manager.id)
+
+    manager.reports = underlings
+
+    underlings.forEach(emply => {
+      findEmployeesFor(emply, employees)
+    })
+  }
+  findEmployeesFor(tree, employees) 
   return tree
 }
 
-spacer('generateManagementTree')
-//given a list of employees, generate a tree like structure for the employees, starting with the employee who has no manager. Each employee will have a reports property which is an array of the employees who report directly to them.
-console.log(JSON.stringify(generateManagementTree(employees), null, 2));
-/*
-{
-  "id": 1,
-  "name": "moe",
-  "reports": [
-    {
-      "id": 2,
-      "name": "larry",
-      "managerId": 1,
-      "reports": [
-        {
-          "id": 4,
-          "name": "shep",
-          "managerId": 2,
-          "reports": [
-            {
-              "id": 8,
-              "name": "shep Jr.",
-              "managerId": 4,
-              "reports": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "name": "curly",
-      "managerId": 1,
-      "reports": [
-        {
-          "id": 5,
-          "name": "groucho",
-          "managerId": 3,
-          "reports": [
-            {
-              "id": 6,
-              "name": "harpo",
-              "managerId": 5,
-              "reports": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": 99,
-      "name": "lucy",
-      "managerId": 1,
-      "reports": []
+
+
+
+
+const displayManagementTree = (obj) => {
+  let resultStri = ''
+  resultStri += obj.name + '\n'
+
+  for (key in obj) {
+    if (Array.isArray(obj[key])) {
+      obj[key].forEach(lowerObj => {
+        lowerObj.name = `-${lowerObj.name}`
+        return resultStri += displayManagementTree(lowerObj)
+      }) 
     }
-  ]
+  }
+  return resultStri
 }
-*/
-spacer('');
